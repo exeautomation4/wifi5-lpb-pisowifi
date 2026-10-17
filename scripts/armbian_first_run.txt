@@ -1,0 +1,23 @@
+#--------------------------------------------------------------------------------------------------------------------------------
+# Armbian Unattended First-Run Configuration File for WiFi5 LPB Piso WiFi Vendo
+# Purpose: Placed in the SD card's FAT/boot partition as 'armbian_first_run.txt'
+# Bypasses all interactive keyboard/monitor prompts on first boot!
+#--------------------------------------------------------------------------------------------------------------------------------
+
+# 1. Root User & Security
+# Automatically sets root password to 'orangepi'
+FR_root_password="orangepi"
+FR_root_password_change=0
+
+# Skip mandatory non-root user creation (not needed for dedicated headless vendo)
+FR_user_create=0
+
+# 2. Hostname
+FR_hostname="wifi5-piso"
+
+# 3. Network Defaults
+FR_net_change_defaults=0
+FR_net_wifi_enabled=0
+
+# 4. Cleanup
+FR_general_delete_this_file_after_completion=0

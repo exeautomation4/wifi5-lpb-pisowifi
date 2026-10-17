@@ -1,0 +1,17 @@
+[Unit]
+Description=WiFi5 LPB Piso WiFi Autonomous Hotspot & Coin Daemon
+After=network.target dnsmasq.service nginx.service
+Wants=dnsmasq.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/wifi5-piso
+ExecStart=/usr/bin/python3 /opt/wifi5-piso/scripts/gpio_coin_daemon.py
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

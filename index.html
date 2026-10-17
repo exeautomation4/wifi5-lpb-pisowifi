@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WiFi5 LPB Piso WiFi | Standalone SBC & Mini PC Vendo Suite</title>
+  <meta name="description" content="Autonomous Piso WiFi Vendo Software Suite for Orange Pi, Raspberry Pi & x86 Mini PC with captive portal, coin detection, voucher studio, and admin panel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Mode Switcher Bar -->
+  <header class="top-nav" id="mainHeader">
+    <div class="nav-brand">
+      <img src="assets/logo.jpg" alt="WiFi5 LPB Logo" class="brand-logo" id="headerLogo">
+      <div class="brand-text">
+        <div class="brand-title">WiFi5 <span class="accent-text">LPB</span></div>
+        <div class="brand-subtitle">Standalone SBC Vendo OS</div>
+      </div>
+    </div>
+
+    <!-- Active Mode Selector -->
+    <nav class="nav-modes" aria-label="System Mode">
+      <button class="mode-btn active" id="btnModePortal" onclick="switchMainView('portal')">
+        <span class="btn-icon">📱</span>
+        <span class="btn-text">Client Portal</span>
+      </button>
+      <button class="mode-btn" id="btnModeAdmin" onclick="switchMainView('admin')">
+        <span class="btn-icon">📊</span>
+        <span class="btn-text">Owner Admin</span>
+      </button>
+      <button class="mode-btn" id="btnModeHardware" onclick="switchMainView('hardware')">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-text">Coin & GPIO Lab</span>
+      </button>
+      <button class="mode-btn" id="btnModeDeploy" onclick="switchMainView('deploy')">
+        <span class="btn-icon">🐧</span>
+        <span class="btn-text">Linux Deployment</span>
+      </button>
+    </nav>
+
+    <!-- Header System Badges -->
+    <div class="nav-system-status">
+      <div class="status-pill relay-pill" id="relayStatusPill" title="Coin slot 12V cut-off relay status">
+        <span class="dot pulse-dot"></span>
+        <span class="status-label" id="relayStatusText">Relay: Active</span>
+      </div>
+      <div class="status-pill sbc-pill" title="Target Hardware Host">
+        <span class="badge-tag">Armbian SBC</span>
+        <span class="sbc-ip" id="systemGatewayIp">10.0.0.1</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="main-container" id="mainContainer">
+
+    <!-- ================================================================= -->
+    <!-- VIEW 1: CLIENT CAPTIVE PORTAL                                    -->
+    <!-- ================================================================= -->
+    <section id="viewPortal" class="view-section active">
+      <div class="portal-viewport-wrapper">
+        <!-- Control strip for simulator preview mode -->
+        <div class="preview-toolbar">
+          <div class="toolbar-left">
+            <span class="badge-sim">Client Simulator</span>
+            <span class="client-meta">IP: <strong id="portalClientIp">10.0.0.104</strong> | MAC: <strong id="portalClientMac">8A:3F:4D:12:9E:55</strong></span>
+          </div>
+          <div class="toolbar-right">
+            <button class="tool-btn" id="btnTogglePhoneFrame" onclick="togglePhoneFrame()" title="Toggle realistic smartphone frame preview">
+              📱 Toggle Phone Mockup
+            </button>
+          </div>
+        </div>
+
+        <!-- Portal Device Frame -->
+        <div class="phone-frame-container" id="phoneContainer">
+          <div class="phone-speaker"></div>
+          <div class="phone-screen">
+
+            <!-- Mobile Captive Portal App -->
+            <div class="portal-app">
+              <!-- Portal Header -->
+              <div class="portal-header">
+                <div class="portal-logo-wrap">
+                  <img src="assets/logo.jpg" alt="Piso WiFi" class="portal-avatar">
+                  <div class="portal-vendor-meta">
+                    <h1 class="portal-title" id="dispPortalTitle">WiFi5 High-Speed Piso WiFi</h1>
+                    <div class="portal-tagline" id="dispPortalTagline">Insert Coin for Blazing Fast Internet</div>
+                  </div>
+                </div>
+                <div class="portal-network-badge">
+                  <span class="wifi-wave">📶</span>
+                  <span class="network-ssid" id="dispNetworkSsid">WiFi5_LPB_Hotspot</span>
+                </div>
+              </div>
+
+              <!-- Live Internet Status Banner -->
+              <div class="portal-status-card" id="portalStatusCard">
+                <div class="status-header">
+                  <span class="session-indicator" id="sessionIndicatorDot"></span>
+                  <span class="session-label" id="sessionLabel">NO ACTIVE TIME</span>
+                </div>
+                <div class="status-sub" id="sessionSubText">Hulog piso para magka-internet connection</div>
+
+                <!-- Hero Countdown Display -->
+                <div class="timer-display-box" id="timerDisplayBox">
+                  <div class="timer-ring-container">
+                    <svg class="timer-svg" viewBox="0 0 200 200">
+                      <circle class="timer-bg-circle" cx="100" cy="100" r="88" />
+                      <circle class="timer-progress-circle" id="timerProgressRing" cx="100" cy="100" r="88" />
+                    </svg>
+                    <div class="timer-numbers">
+                      <span class="timer-value" id="dispRemainingTime">00:00:00</span>
+                      <span class="timer-units">HRS : MINS : SECS</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Connection Specs Pills -->
+                <div class="connection-stats-grid">
+                  <div class="stat-pill">
+                    <span class="stat-icon">⚡</span>
+                    <div class="stat-info">
+                      <div class="stat-title">Speed Limit</div>
+                      <div class="stat-data" id="dispSpeedLimit">5.0 Mbps</div>
+                    </div>
+                  </div>
+                  <div class="stat-pill">
+                    <span class="stat-icon">📶</span>
+                    <div class="stat-info">
+                      <div class="stat-title">Ping / Latency</div>
+                      <div class="stat-data" id="dispPing">14 ms</div>
+                    </div>
+                  </div>
+                  <div class="stat-pill">
+                    <span class="stat-icon">🔒</span>
+                    <div class="stat-info">
+                      <div class="stat-title">Security</div>
+                      <div class="stat-data">Encrypted</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Primary Action Hub -->
+              <div class="portal-actions-hub">
+                <!-- Massive Glowing INSERT COIN button -->
+                <button class="btn-insert-coin" id="btnOpenCoinModal" onclick="openCoinModal()">
+                  <span class="btn-pulse-glow"></span>
+                  <div class="btn-coin-content">
+                    <span class="coin-icon">🪙</span>
+                    <div class="coin-text-group">
+                      <span class="main-action-text">INSERT COIN</span>
+                      <span class="sub-action-text">Pindutin para mag-hulog ng barya</span>
+                    </div>
+                  </div>
+                  <span class="arrow-indicator">➔</span>
+                </button>
+
+                <!-- Auxiliary Controls (Pause/Resume & Voucher) -->
+                <div class="portal-aux-buttons">
+                  <button class="aux-btn btn-pause" id="btnPauseTime" onclick="togglePauseTime()">
+                    <span class="aux-icon">⏸️</span>
+                    <span class="aux-label" id="lblPauseBtn">Pause Time</span>
+                  </button>
+                  <button class="aux-btn btn-voucher" id="btnOpenVoucherModal" onclick="openVoucherModal()">
+                    <span class="aux-icon">🎟️</span>
+                    <span class="aux-label">Use Voucher</span>
+                  </button>
+                  <button class="aux-btn btn-rates" id="btnScrollRates" onclick="scrollToRates()">
+                    <span class="aux-icon">📋</span>
+                    <span class="aux-label">Rates</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Rates & Pricing Card -->
+              <div class="portal-rates-card" id="portalRatesSection">
+                <div class="card-title-row">
+                  <h2 class="section-title">WiFi Rates & Promos</h2>
+                  <span class="tag-promo">All Coins Accepted</span>
+                </div>
+                <p class="rates-subtitle">Multi-coin slot accepts ₱1, ₱5, ₱10, & ₱20 coins automatically</p>
+
+                <div class="rates-grid" id="portalRatesGrid">
+                  <!-- Populated dynamically by JavaScript -->
+                </div>
+              </div>
+
+              <!-- Troubleshooting & Info -->
+              <div class="portal-info-card">
+                <h3 class="info-card-title">💡 Paano Gamitin (How to Connect)</h3>
+                <ol class="info-steps">
+                  <li>Pindutin ang <strong>INSERT COIN</strong> button.</li>
+                  <li>Hintayin mag-ilaw ang coin slot at ihulog ang barya sa loob ng 60 seconds.</li>
+                  <li>Pindutin ang <strong>DONE / CONNECT</strong> para agad makapag-browse.</li>
+                  <li>Gamitin ang <strong>PAUSE TIME</strong> kung aalis pansamantala para hindi masayang ang oras.</li>
+                </ol>
+              </div>
+
+              <!-- Portal Footer -->
+              <footer class="portal-footer">
+                <div class="footer-brand">WiFi5 LPB Vendo OS • Autonomous SBC Hotspot</div>
+                <div class="footer-help">Need assistance? Contact Vendo Admin: <strong id="dispAdminContact">0919-651-9817</strong></div>
+              </footer>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 2: OWNER ADMIN STUDIO                                       -->
+    <!-- ================================================================= -->
+    <section id="viewAdmin" class="view-section">
+      <div class="admin-studio-wrapper">
+
+        <!-- Admin Lock Screen (if locked) -->
+        <div class="admin-auth-card" id="adminAuthGate" style="display: none;">
+          <div class="auth-icon">🔐</div>
+          <h2 class="auth-title">Owner Administration</h2>
+          <p class="auth-desc">Enter your 4-digit Master Security PIN to manage sales, vouchers, and hardware settings.</p>
+          <div class="pin-input-group">
+            <input type="password" maxlength="6" id="adminPinInput" class="pin-input" placeholder="••••" autocomplete="off">
+            <button class="btn-primary" onclick="verifyAdminPin()">Unlock Studio</button>
+          </div>
+          <div class="pin-hint">Default Factory PIN: <code>1234</code></div>
+        </div>
+
+        <!-- Authenticated Admin Interface -->
+        <div class="admin-content-dashboard" id="adminDashboardPanel">
+          <!-- Admin Header Bar -->
+          <div class="admin-top-bar">
+            <div>
+              <h1 class="admin-main-title">Vendo Executive Studio</h1>
+              <p class="admin-subtitle">Real-time revenue monitoring, voucher factory, rates, & client session manager</p>
+            </div>
+            <div class="admin-actions-bar">
+              <button class="admin-btn-secondary" onclick="exportSalesCsv()">📥 Export CSV</button>
+              <button class="admin-btn-secondary" onclick="exportBackupJson()">💾 Backup Data</button>
+              <button class="admin-btn-danger" onclick="confirmResetSales()">⚠️ Reset Sales</button>
+              <button class="admin-btn-lock" onclick="lockAdminStudio()">🔒 Lock</button>
+            </div>
+          </div>
+
+          <!-- Revenue Analytics 4-Card Hero Grid -->
+          <div class="revenue-hero-grid">
+            <div class="rev-card card-today">
+              <div class="rev-header">
+                <span class="rev-label">TODAY'S SALES</span>
+                <span class="rev-badge">Live</span>
+              </div>
+              <div class="rev-amount" id="adminSalesToday">₱ 0.00</div>
+              <div class="rev-sub" id="adminCoinsToday">0 coins collected today</div>
+            </div>
+
+            <div class="rev-card card-week">
+              <div class="rev-header">
+                <span class="rev-label">THIS WEEK</span>
+                <span class="rev-badge">7 Days</span>
+              </div>
+              <div class="rev-amount" id="adminSalesWeek">₱ 0.00</div>
+              <div class="rev-sub">Rolling weekly revenue</div>
+            </div>
+
+            <div class="rev-card card-month">
+              <div class="rev-header">
+                <span class="rev-label">THIS MONTH</span>
+                <span class="rev-badge">30 Days</span>
+              </div>
+              <div class="rev-amount" id="adminSalesMonth">₱ 0.00</div>
+              <div class="rev-sub">Monthly total gross income</div>
+            </div>
+
+            <div class="rev-card card-alltime">
+              <div class="rev-header">
+                <span class="rev-label">ALL-TIME GROSS</span>
+                <span class="rev-badge gold">Total</span>
+              </div>
+              <div class="rev-amount gold-text" id="adminSalesAllTime">₱ 0.00</div>
+              <div class="rev-sub" id="adminTotalCoinsCount">0 total coins accepted</div>
+            </div>
+          </div>
+
+          <!-- Coin Denomination Distribution Row -->
+          <div class="coin-distribution-panel">
+            <div class="panel-section-title">Coin Acceptor Denomination Breakdown</div>
+            <div class="coin-counter-row">
+              <div class="coin-box">
+                <span class="coin-circle c-1">₱1</span>
+                <div class="coin-meta">
+                  <div class="coin-count" id="count1Peso">0 pcs</div>
+                  <div class="coin-val" id="val1Peso">₱ 0</div>
+                </div>
+              </div>
+              <div class="coin-box">
+                <span class="coin-circle c-5">₱5</span>
+                <div class="coin-meta">
+                  <div class="coin-count" id="count5Peso">0 pcs</div>
+                  <div class="coin-val" id="val5Peso">₱ 0</div>
+                </div>
+              </div>
+              <div class="coin-box">
+                <span class="coin-circle c-10">₱10</span>
+                <div class="coin-meta">
+                  <div class="coin-count" id="count10Peso">0 pcs</div>
+                  <div class="coin-val" id="val10Peso">₱ 0</div>
+                </div>
+              </div>
+              <div class="coin-box">
+                <span class="coin-circle c-20">₱20</span>
+                <div class="coin-meta">
+                  <div class="coin-count" id="count20Peso">0 pcs</div>
+                  <div class="coin-val" id="val20Peso">₱ 0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Sub-Navigation Tabs -->
+          <div class="admin-tab-nav">
+            <button class="adm-tab-btn active" onclick="switchAdminTab('tabVouchers', this)">🎟️ Voucher Studio & Printer</button>
+            <button class="adm-tab-btn" onclick="switchAdminTab('tabRates', this)">💰 Rates & Promos Manager</button>
+            <button class="adm-tab-btn" onclick="switchAdminTab('tabClients', this)">👥 Active Hotspot Clients</button>
+            <button class="adm-tab-btn" onclick="switchAdminTab('tabHardware', this)">⚙️ Hardware & GPIO Config</button>
+            <button class="adm-tab-btn" onclick="switchAdminTab('tabNetwork', this)">🌐 Network & Hotspot Gateway</button>
+          </div>
+
+          <!-- TAB 1: VOUCHER STUDIO & THERMAL PRINTER -->
+          <div id="tabVouchers" class="admin-tab-pane active">
+            <div class="voucher-management-container">
+              <!-- Generator Card -->
+              <div class="admin-card">
+                <h3 class="card-heading">🎟️ Instant Voucher Generator</h3>
+                <p class="card-caption">Create single or bulk prepaid vouchers for customers without coins or for over-the-counter sales.</p>
+                
+                <div class="generator-form-grid">
+                  <div class="form-group">
+                    <label for="vouchDuration">Time Duration</label>
+                    <select id="vouchDuration" class="form-select">
+                      <option value="60">1 Hour (₱10)</option>
+                      <option value="180">3 Hours (₱20)</option>
+                      <option value="360">6 Hours (₱30)</option>
+                      <option value="720">12 Hours (₱40)</option>
+                      <option value="1440" selected>24 Hours / 1 Day (₱50)</option>
+                      <option value="4320">3 Days (₱120)</option>
+                      <option value="10080">7 Days (₱250)</option>
+                      <option value="43200">30 Days (₱700)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="vouchPrice">Price (₱)</label>
+                    <input type="number" id="vouchPrice" class="form-input" value="50" min="1">
+                  </div>
+                  <div class="form-group">
+                    <label for="vouchQuantity">Quantity to Generate</label>
+                    <input type="number" id="vouchQuantity" class="form-input" value="5" min="1" max="50">
+                  </div>
+                  <div class="form-group">
+                    <label for="vouchPrefix">Code Prefix</label>
+                    <input type="text" id="vouchPrefix" class="form-input" value="WF5" maxlength="4">
+                  </div>
+                </div>
+
+                <div class="generator-btn-row">
+                  <button class="btn-primary" onclick="generateBatchVouchers()">✨ Generate Vouchers</button>
+                  <button class="btn-secondary" onclick="printAllActiveVouchers()">🖨️ Print Active Vouchers (Thermal 58mm/80mm)</button>
+                </div>
+              </div>
+
+              <!-- Voucher Inventory Table Card -->
+              <div class="admin-card">
+                <div class="card-heading-row">
+                  <h3 class="card-heading">Active Voucher Inventory (<span id="voucherCountLabel">0</span>)</h3>
+                  <button class="btn-sm-danger" onclick="clearUsedVouchers()">Purge Used Vouchers</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="voucherTable">
+                    <thead>
+                      <tr>
+                        <th>Voucher Code</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="voucherTableBody">
+                      <!-- Populated via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: RATES & PROMOS MANAGER -->
+          <div id="tabRates" class="admin-tab-pane">
+            <div class="admin-card">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="card-heading">💰 Coin Rates & Time Mapping</h3>
+                  <p class="card-caption">Define how many minutes or hours users receive for each coin denomination dropped.</p>
+                </div>
+                <button class="btn-primary" onclick="addNewRateTier()">+ Add New Rate Tier</button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="data-table" id="ratesConfigTable">
+                  <thead>
+                    <tr>
+                      <th>Coin / Peso (₱)</th>
+                      <th>Time Value</th>
+                      <th>Display Label</th>
+                      <th>Promo Badge</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ratesConfigTableBody">
+                    <!-- Populated via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="card-footer-actions">
+                <button class="btn-primary" onclick="saveCustomRates()">💾 Save Rates Configuration</button>
+                <button class="btn-secondary" onclick="resetRatesToDefault()">↺ Reset to Standard PH Rates</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: CONNECTED CLIENTS MANAGER -->
+          <div id="tabClients" class="admin-tab-pane">
+            <div class="admin-card">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="card-heading">👥 Live Connected Clients</h3>
+                  <p class="card-caption">Real-time session monitor, bandwidth allocation, pause/disconnect controls.</p>
+                </div>
+                <button class="btn-secondary" onclick="refreshClientList()">🔄 Refresh List</button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Client IP</th>
+                      <th>MAC Address</th>
+                      <th>Remaining Time</th>
+                      <th>Allocated Speed</th>
+                      <th>Status</th>
+                      <th>Controls</th>
+                    </tr>
+                  </thead>
+                  <tbody id="clientsTableBody">
+                    <!-- Populated via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: HARDWARE & GPIO CONFIG -->
+          <div id="tabHardware" class="admin-tab-pane">
+            <div class="admin-card">
+              <h3 class="card-heading">⚙️ Linux SBC Hardware & GPIO Controller</h3>
+              <p class="card-caption">Pre-configured for Orange Pi (Allwinner H3/H616), Raspberry Pi, and x86 USB-to-Relay controllers.</p>
+
+              <div class="form-grid-two-col">
+                <div class="form-group">
+                  <label for="gpioTargetSbc">Target SBC Board</label>
+                  <select id="gpioTargetSbc" class="form-select" onchange="updateGpioPinRecommendations()">
+                    <option value="opi_one">Orange Pi One / PC (Allwinner H3)</option>
+                    <option value="opi_zero3">Orange Pi Zero 2 / Zero 3 (Allwinner H616)</option>
+                    <option value="rpi3_4">Raspberry Pi 3 / 4 / Zero 2W</option>
+                    <option value="x86_usb">x86 Mini PC (USB Serial / Arduino Bridge)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="cfgCoinPulsePin">Coin Pulse Input Pin</label>
+                  <input type="text" id="cfgCoinPulsePin" class="form-input" value="PA12 (Pin 3)">
+                </div>
+
+                <div class="form-group">
+                  <label for="cfgCoinRelayPin">Coin Slot 12V Cut-Off Relay Pin</label>
+                  <input type="text" id="cfgCoinRelayPin" class="form-input" value="PA11 (Pin 5)">
+                </div>
+
+                <div class="form-group">
+                  <label for="cfgDebounceMs">Software Debounce Time (ms)</label>
+                  <input type="number" id="cfgDebounceMs" class="form-input" value="40" min="20" max="100">
+                </div>
+
+                <div class="form-group">
+                  <label for="cfgCoinTimeout">Coin Insert Window Timeout (seconds)</label>
+                  <input type="number" id="cfgCoinTimeout" class="form-input" value="60" min="30" max="180">
+                </div>
+
+                <div class="form-group">
+                  <label for="cfgBuzzerPin">Buzzer / Audio Chime Pin (Optional)</label>
+                  <input type="text" id="cfgBuzzerPin" class="form-input" value="PA06 (Pin 7)">
+                </div>
+              </div>
+
+              <div class="card-footer-actions">
+                <button class="btn-primary" onclick="saveHardwareConfig()">💾 Save Hardware Settings</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: NETWORK & HOTSPOT GATEWAY -->
+          <div id="tabNetwork" class="admin-tab-pane">
+            <div class="admin-card">
+              <h3 class="card-heading">🌐 Hotspot & Network Gateway Parameters</h3>
+              <p class="card-caption">Linux <code>dnsmasq</code>, <code>iptables</code>, and captive portal traffic redirection settings.</p>
+
+              <div class="form-grid-two-col">
+                <div class="form-group">
+                  <label for="cfgHotspotSsid">Hotspot Wi-Fi SSID</label>
+                  <input type="text" id="cfgHotspotSsid" class="form-input" value="WiFi5_HighSpeed_PisoWiFi">
+                </div>
+                <div class="form-group">
+                  <label for="cfgHotspotIp">Hotspot Gateway IP</label>
+                  <input type="text" id="cfgHotspotIp" class="form-input" value="10.0.0.1">
+                </div>
+                <div class="form-group">
+                  <label for="cfgDhcpRange">DHCP Client IP Range</label>
+                  <input type="text" id="cfgDhcpRange" class="form-input" value="10.0.0.10 - 10.0.0.250">
+                </div>
+                <div class="form-group">
+                  <label for="cfgDownSpeed">Default Download Speed Limit (Mbps)</label>
+                  <input type="number" id="cfgDownSpeed" class="form-input" value="5.0" step="0.5" min="1">
+                </div>
+                <div class="form-group">
+                  <label for="cfgUpSpeed">Default Upload Speed Limit (Mbps)</label>
+                  <input type="number" id="cfgUpSpeed" class="form-input" value="2.0" step="0.5" min="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="cfgAdminPin">Admin Master PIN</label>
+                  <input type="password" id="cfgAdminPin" class="form-input" value="1234">
+                </div>
+              </div>
+
+              <div class="card-footer-actions">
+                <button class="btn-primary" onclick="saveNetworkConfig()">💾 Apply Network Gateway Settings</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 3: HARDWARE COIN & GPIO INTERRUPT LAB                        -->
+    <!-- ================================================================= -->
+    <section id="viewHardware" class="view-section">
+      <div class="lab-container">
+        <div class="lab-header">
+          <h1 class="lab-title">⚡ Interactive Hardware Coin & GPIO Lab</h1>
+          <p class="lab-subtitle">Test and observe how the Allan 1234A Multi-Coin Acceptor pulses are debounced and processed by the Linux kernel daemon.</p>
+        </div>
+
+        <div class="lab-grid">
+          <!-- Left: Hardware Circuit Diagram & State Monitor -->
+          <div class="lab-card circuit-card">
+            <h2 class="card-title">Electronic Circuit & Relay State</h2>
+            <div class="circuit-visual">
+              <div class="circuit-node coin-mech">
+                <div class="node-icon">🪙</div>
+                <div class="node-title">Allan 1234A Acceptor</div>
+                <div class="node-state" id="dispMechState">Active • Ready</div>
+              </div>
+              <div class="circuit-wire wire-active">
+                <span class="wire-label">PULSE (NPN Open-Collector)</span>
+              </div>
+              <div class="circuit-node relay-block">
+                <div class="node-icon">🔌</div>
+                <div class="node-title">12V Cut-Off Relay</div>
+                <div class="node-state" id="dispRelayStateNode">State: ENERGIZED (PASS)</div>
+              </div>
+              <div class="circuit-wire wire-active">
+                <span class="wire-label">GPIO Pin PA12</span>
+              </div>
+              <div class="circuit-node sbc-block">
+                <div class="node-icon">🖥️</div>
+                <div class="node-title">Linux SBC Kernel</div>
+                <div class="node-state">Daemon: Listening</div>
+              </div>
+            </div>
+
+            <!-- Oscilloscope / Pulse train simulation -->
+            <div class="oscilloscope-container">
+              <div class="scope-header">
+                <span>GPIO PA12 Digital Logic Analyzer</span>
+                <span class="scope-indicator" id="scopeIndicator">HIGH (3.3V)</span>
+              </div>
+              <div class="scope-screen" id="scopeScreen">
+                <div class="pulse-train" id="scopePulseTrain"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Coin Acceptor Injection Console -->
+          <div class="lab-card console-card">
+            <h2 class="card-title">Inject Coin Pulses</h2>
+            <p class="card-caption">Click to simulate mechanical coin drops into the slot. Each drop fires rapid GPIO hardware interrupts:</p>
+
+            <div class="coin-injection-buttons">
+              <button class="inject-btn c1" onclick="simulateCoinPulse(1, 1)">
+                <span class="inj-coin">₱1</span>
+                <span class="inj-meta">1 Pulse • 40ms</span>
+              </button>
+              <button class="inject-btn c5" onclick="simulateCoinPulse(5, 5)">
+                <span class="inj-coin">₱5</span>
+                <span class="inj-meta">5 Pulses • 40ms</span>
+              </button>
+              <button class="inject-btn c10" onclick="simulateCoinPulse(10, 10)">
+                <span class="inj-coin">₱10</span>
+                <span class="inj-meta">10 Pulses • 40ms</span>
+              </button>
+              <button class="inject-btn c20" onclick="simulateCoinPulse(20, 20)">
+                <span class="inj-coin">₱20</span>
+                <span class="inj-meta">20 Pulses • 40ms</span>
+              </button>
+            </div>
+
+            <div class="relay-test-controls">
+              <h3 class="sub-title">12V Solenoid Cut-Off Relay Testing</h3>
+              <p class="sub-desc">Prevents coin insertion until customer presses "INSERT COIN".</p>
+              <div class="btn-group">
+                <button class="btn-primary" onclick="setRelayHardwareState(true)">⚡ Energize Relay (Accept Coins)</button>
+                <button class="btn-danger" onclick="setRelayHardwareState(false)">🚫 De-energize Relay (Reject Coins)</button>
+              </div>
+            </div>
+
+            <!-- Terminal Pulse Log -->
+            <div class="pulse-terminal">
+              <div class="term-title-bar">
+                <span>/var/log/wifi5-coin-daemon.log</span>
+                <button class="btn-term-clear" onclick="clearPulseLog()">Clear</button>
+              </div>
+              <div class="term-body" id="pulseLogBody">
+                <div class="term-line info">[SYSTEM] WiFi5 SBC Coin Daemon Initialized on GPIO PA12 (Pin 3).</div>
+                <div class="term-line info">[SYSTEM] Active low edge trigger with 40ms software debounce configured.</div>
+                <div class="term-line ready">[READY] Waiting for coin insertion pulse train...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 4: LINUX SBC DEPLOYMENT & SHELL SCRIPTS HUB                  -->
+    <!-- ================================================================= -->
+    <section id="viewDeploy" class="view-section">
+      <div class="deploy-container">
+        <div class="deploy-hero">
+          <h1 class="deploy-title">🐧 Turnkey Linux SBC Deployment Hub</h1>
+          <p class="deploy-subtitle">Transform any Orange Pi One, PC, Zero 2/3, Raspberry Pi, or x86 Thin Client into a standalone commercial Piso WiFi Vendo in under 10 minutes.</p>
+        </div>
+
+        <!-- 1-Step Master Installation Command -->
+        <div class="quick-install-box">
+          <div class="box-header">
+            <span class="badge-cli">1-Step Automated Terminal Command</span>
+            <span class="os-compatibility">Armbian 24+ • Debian 12 (Bookworm) • Ubuntu Server</span>
+          </div>
+          <div class="code-banner">
+            <code id="masterCurlCommand">curl -sSL https://raw.githubusercontent.com/wifi5-lpb/installer/main/install.sh | sudo bash</code>
+            <button class="btn-copy" onclick="copyMasterCommand()">📋 Copy Command</button>
+          </div>
+        </div>
+
+        <!-- Script File Explorer Tabs -->
+        <div class="script-tabs-wrapper">
+          <div class="script-tab-bar">
+            <button class="sc-tab-btn active" onclick="switchScriptTab('scInstall', this)">📜 install.sh (Master Installer)</button>
+            <button class="sc-tab-btn" onclick="switchScriptTab('scImageBuilder', this)">💿 build_bootable_image.sh (Balena Etcher)</button>
+            <button class="sc-tab-btn" onclick="switchScriptTab('scGpio', this)">🐍 gpio_coin_daemon.py (GPIO Handler)</button>
+            <button class="sc-tab-btn" onclick="switchScriptTab('scIptables', this)">🛡️ setup_iptables.sh (Captive NAT)</button>
+            <button class="sc-tab-btn" onclick="switchScriptTab('scDnsmasq', this)">🌐 dnsmasq.conf (DHCP & DNS)</button>
+            <button class="sc-tab-btn" onclick="switchScriptTab('scService', this)">⚙️ wifi5-piso.service (systemd)</button>
+          </div>
+
+          <div class="script-content-display">
+            <!-- SCRIPT 1: install.sh -->
+            <div id="scInstall" class="script-pane active">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/install.sh</code> • Size: ~3.8 KB</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeInstall')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeInstall" class="code-block">#!/usr/bin/env bash
+# ==============================================================================
+# WiFi5 LPB Piso WiFi Vendo - 1-Step Turnkey Linux Installer
+# Supported Boards: Orange Pi One / PC / Zero 2 / Zero 3 / Raspberry Pi 3 & 4
+# OS: Armbian / Debian 12 Bookworm / Ubuntu Server
+# ==============================================================================
+
+set -e
+echo "=========================================================="
+echo "   🚀 Starting WiFi5 LPB Piso WiFi System Installation   "
+echo "=========================================================="
+
+if [ "$EUID" -ne 0 ]; then
+  echo "❌ Error: Please run as root (sudo bash install.sh)"
+  exit 1
+fi
+
+# Step 1: Update & Install Core Hotspot & Gateway Packages
+echo "📦 Step 1: Installing hotspot packages (dnsmasq, iptables, python3-gpiod, hostapd)..."
+apt-get update -y
+apt-get install -y dnsmasq iptables iptables-persistent net-tools python3 python3-pip python3-gpiod curl
+
+# Step 2: Configure Static IP on Hotspot Bridge Interface (eth0 or wlan0)
+echo "🌐 Step 2: Configuring Hotspot IP (10.0.0.1/24)..."
+cat << 'EOF' > /etc/network/interfaces.d/hotspot
+auto wlan0
+iface wlan0 inet static
+    address 10.0.0.1
+    netmask 255.255.255.0
+EOF
+
+# Step 3: Configure dnsmasq for DHCP & Captive Portal Redirection
+echo "⚙️ Step 3: Deploying dnsmasq captive portal & DNS spoofer..."
+cp scripts/dnsmasq.conf /etc/dnsmasq.d/wifi5-piso.conf
+systemctl restart dnsmasq
+
+# Step 4: Configure Kernel IP Forwarding & iptables Captive Rules
+echo "🛡️ Step 4: Enabling IPv4 NAT Forwarding and Captive Portal Firewall..."
+sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+sysctl -p
+bash scripts/setup_iptables.sh
+
+# Step 5: Install GPIO Coin Detection Daemon & Systemd Service
+echo "⚡ Step 5: Registering wifi5-piso.service in systemd..."
+mkdir -p /opt/wifi5-piso
+cp -r . /opt/wifi5-piso/
+cp scripts/wifi5-piso.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable wifi5-piso.service
+systemctl restart wifi5-piso.service
+
+echo "=========================================================="
+echo "   ✅ WiFi5 LPB Piso WiFi Installed & Running!           "
+echo "   Captive Portal Gateway: http://10.0.0.1               "
+echo "   Owner Admin Portal:     http://10.0.0.1/admin         "
+echo "=========================================================="</code></pre>
+            </div>
+
+            <!-- SCRIPT: build_bootable_image.sh (Balena Etcher Builder) -->
+            <div id="scImageBuilder" class="script-pane">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/build_bootable_image.sh</code> • Turnkey Balena Etcher Image Builder</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeImageBuilder')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeImageBuilder" class="code-block">#!/usr/bin/env bash
+# ==============================================================================
+# WiFi5 LPB Piso WiFi - Turnkey Bootable Image Generator for Balena Etcher
+# Creates a ready-to-flash .img.xz file for Orange Pi (One / PC / Zero 2 / Zero 3)
+# Usage: sudo bash scripts/build_bootable_image.sh
+# ==============================================================================
+
+set -euo pipefail
+
+# 1. Downloads or accepts official Armbian minimal image for Orange Pi
+# 2. Expands partition by +750MB
+# 3. Mounts image loopback filesystem
+# 4. Injects entire WiFi5 LPB Vendo codebase into /opt/wifi5-piso
+# 5. Pre-configures unattended first boot (bypasses monitor/keyboard setup, sets root password)
+# 6. Pre-configures dnsmasq, iptables captive portal, and systemd services
+# 7. Compresses into final Balena Etcher-ready .img.xz image in output/ directory
+
+sudo bash scripts/build_bootable_image.sh
+# Output: output/wifi5-lpb-pisowifi-orangepione.img.xz</code></pre>
+            </div>
+
+            <!-- SCRIPT 2: gpio_coin_daemon.py -->
+            <div id="scGpio" class="script-pane">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/gpio_coin_daemon.py</code> • Hardware Interrupt Handler</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeGpio')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeGpio" class="code-block">#!/usr/bin/env python3
+"""
+WiFi5 LPB Piso WiFi - GPIO Coin Detection & 12V Cut-Off Relay Daemon
+Compatible with: Orange Pi (OPi.GPIO / gpiod) and Raspberry Pi (RPi.GPIO)
+Listens for pulse trains from Allan 1234A / 1235A Multi-Coin Acceptors.
+"""
+
+import time
+import sys
+import os
+import threading
+import json
+import urllib.request
+
+# Configuration
+PULSE_PIN = 12       # Orange Pi PA12 (Physical Pin 3)
+RELAY_PIN = 11       # 12V Coin Acceptor Cut-Off Relay (Physical Pin 5)
+DEBOUNCE_MS = 40     # Allan 1234A standard pulse width
+INTER_COIN_GAP = 0.5 # Seconds of silence before finalizing pulse count
+
+pulse_counter = 0
+last_pulse_time = 0
+lock = threading.Lock()
+
+print("[WIFI5] Initializing GPIO Coin Detection Daemon...")
+
+def on_pulse_detected():
+    """Triggered by hardware interrupt on falling edge."""
+    global pulse_counter, last_pulse_time
+    now = time.time()
+    with lock:
+        # Software Debounce Filter
+        if (now - last_pulse_time) * 1000 >= DEBOUNCE_MS:
+            pulse_counter += 1
+            last_pulse_time = now
+            print(f"[PULSE] Detected pulse #{pulse_counter}")
+
+def pulse_evaluator_loop():
+    """Timer loop that counts pulses and converts to Philippine Pesos."""
+    global pulse_counter, last_pulse_time
+    while True:
+        time.sleep(0.1)
+        with lock:
+            if pulse_counter > 0 and (time.time() - last_pulse_time) > INTER_COIN_GAP:
+                amount_peso = pulse_counter
+                print(f"[COIN CREDITED] Finalized: {pulse_counter} pulses = ₱{amount_peso}.00")
+                notify_local_server(amount_peso)
+                pulse_counter = 0
+
+def notify_local_server(peso):
+    """Notifies local backend server of coin insertion."""
+    url = f"http://127.0.0.1:8080/api/coin-inserted?amount={peso}"
+    try:
+        req = urllib.request.Request(url, method='POST')
+        with urllib.request.urlopen(req, timeout=2) as response:
+            print(f"[API] Server acknowledged ₱{peso} coin credit.")
+    except Exception as e:
+        print(f"[API ERROR] Failed to notify local server: {e}")
+
+if __name__ == "__main__":
+    t = threading.Thread(target=pulse_evaluator_loop, daemon=True)
+    t.start()
+    print("[WIFI5] Coin Listener Active. Ready for coins.")
+    while True:
+        time.sleep(1)</code></pre>
+            </div>
+
+            <!-- SCRIPT 3: setup_iptables.sh -->
+            <div id="scIptables" class="script-pane">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/setup_iptables.sh</code> • Captive Firewall & NAT</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeIptables')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeIptables" class="code-block">#!/usr/bin/env bash
+# ==============================================================================
+# WiFi5 LPB Piso WiFi - iptables Captive Portal & NAT Masquerade Rules
+# ==============================================================================
+
+HOTSPOT_IF="wlan0"
+WAN_IF="eth0"
+PORTAL_IP="10.0.0.1"
+PORTAL_PORT="80"
+
+echo "[FIREWALL] Flushing legacy rules..."
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+
+echo "[FIREWALL] Enabling NAT Masquerade on WAN (${WAN_IF})..."
+iptables -t nat -A POSTROUTING -o ${WAN_IF} -j MASQUERADE
+
+# Create Custom Whitelist Chain for paying customers
+iptables -N WIFI5_WHITELIST
+iptables -t nat -N WIFI5_CAPTIVE
+
+# Allow DNS and DHCP immediately for all clients
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p udp --dport 67:68 -j ACCEPT
+
+# Bypass captive portal detection probes (Apple, Android, Windows)
+iptables -t nat -A WIFI5_CAPTIVE -d captive.apple.com -j ACCEPT
+iptables -t nat -A WIFI5_CAPTIVE -d connectivitycheck.gstatic.com -j ACCEPT
+iptables -t nat -A WIFI5_CAPTIVE -d msftconnecttest.com -j ACCEPT
+
+# Redirect unauthenticated HTTP traffic to Local Captive Portal
+iptables -t nat -A PREROUTING -i ${HOTSPOT_IF} -p tcp --dport 80 -j WIFI5_CAPTIVE
+iptables -t nat -A WIFI5_CAPTIVE -p tcp --dport 80 -j DNAT --to-destination ${PORTAL_IP}:${PORTAL_PORT}
+
+echo "[FIREWALL] Captive Portal Redirection active on ${PORTAL_IP}:${PORTAL_PORT}"</code></pre>
+            </div>
+
+            <!-- SCRIPT 4: dnsmasq.conf -->
+            <div id="scDnsmasq" class="script-pane">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/dnsmasq.conf</code> • Lightweight DHCP & DNS</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeDnsmasq')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeDnsmasq" class="code-block"># WiFi5 LPB Piso WiFi - dnsmasq configuration
+interface=wlan0
+listen-address=10.0.0.1
+bind-interfaces
+
+# DHCP Pool Allocation: 10.0.0.10 to 10.0.0.250 with 1 hour lease
+dhcp-range=10.0.0.10,10.0.0.250,255.255.255.0,1h
+dhcp-option=option:router,10.0.0.1
+dhcp-option=option:dns-server,10.0.0.1,8.8.8.8
+
+# Captive Portal DNS Redirection (Wildcard Spoofer)
+address=/logout/10.0.0.1
+address=/hotspot.wifi5/10.0.0.1
+address=/vendo.net/10.0.0.1</code></pre>
+            </div>
+
+            <!-- SCRIPT 5: wifi5-piso.service -->
+            <div id="scService" class="script-pane">
+              <div class="pane-meta-bar">
+                <span>Location: <code>scripts/wifi5-piso.service</code> • Systemd Auto-Start</span>
+                <button class="btn-copy-code" onclick="copyCodeFromElement('codeService')">📋 Copy Script</button>
+              </div>
+              <pre><code id="codeService" class="code-block">[Unit]
+Description=WiFi5 LPB Piso WiFi Standalone Hotspot Gateway
+After=network.target dnsmasq.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/wifi5-piso
+ExecStart=/usr/bin/python3 /opt/wifi5-piso/scripts/gpio_coin_daemon.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- MODAL 1: INTERACTIVE COIN INSERTION TRAY                         -->
+  <!-- ================================================================= -->
+  <div class="modal-overlay" id="coinModalOverlay" style="display: none;">
+    <div class="coin-modal-card" id="coinModalCard">
+      <div class="coin-modal-header">
+        <div class="modal-title-row">
+          <span class="live-dot pulse-dot"></span>
+          <h2 class="modal-title">COIN SLOT ACTIVE</h2>
+        </div>
+        <button class="btn-modal-close" onclick="closeCoinModal()">✕</button>
+      </div>
+
+      <div class="coin-modal-body">
+        <!-- Mechanical Coin Slot Animation -->
+        <div class="coin-slot-graphic">
+          <div class="slot-plate">
+            <div class="slot-opening" id="slotOpeningAnim"></div>
+            <div class="slot-indicator-led active" id="slotLedIndicator">READY</div>
+          </div>
+        </div>
+
+        <!-- 60-Second Countdown Bar -->
+        <div class="coin-timer-bar-wrap">
+          <div class="coin-timer-header">
+            <span>Time Remaining to Drop Coins:</span>
+            <span class="coin-timer-seconds" id="coinCountdownSeconds">60s</span>
+          </div>
+          <div class="coin-timer-progress">
+            <div class="coin-timer-fill" id="coinCountdownBar"></div>
+          </div>
+        </div>
+
+        <!-- Real-Time Inserted Total & Credit -->
+        <div class="live-credit-counter">
+          <div class="credit-box">
+            <div class="credit-label">Total Inserted:</div>
+            <div class="credit-amount" id="modalInsertedAmount">₱ 0.00</div>
+          </div>
+          <div class="credit-box">
+            <div class="credit-label">Time Credit Earned:</div>
+            <div class="credit-time" id="modalCalculatedTime">+0 mins</div>
+          </div>
+        </div>
+
+        <!-- Interactive Coin Drop Buttons (Simulated Coin Drop) -->
+        <div class="interactive-drop-zone">
+          <div class="drop-label">Drop Coin Simulator (Click coin to insert):</div>
+          <div class="coin-drop-grid">
+            <button class="coin-chip chip-1" onclick="dropSimulatedCoin(1)">
+              <span class="chip-val">₱1</span>
+              <span class="chip-tag">+15m</span>
+            </button>
+            <button class="coin-chip chip-5" onclick="dropSimulatedCoin(5)">
+              <span class="chip-val">₱5</span>
+              <span class="chip-tag">+2.5h</span>
+            </button>
+            <button class="coin-chip chip-10" onclick="dropSimulatedCoin(10)">
+              <span class="chip-val">₱10</span>
+              <span class="chip-tag">+6h</span>
+            </button>
+            <button class="coin-chip chip-20" onclick="dropSimulatedCoin(20)">
+              <span class="chip-val">₱20</span>
+              <span class="chip-tag">+15h</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="coin-modal-footer">
+        <button class="btn-cancel" onclick="closeCoinModal()">Cancel</button>
+        <button class="btn-finish-connect" id="btnFinishConnect" onclick="finalizeCoinSession()">
+          <span class="icon">🚀</span> DONE / CONNECT TO INTERNET
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL 2: VOUCHER REDEMPTION DIALOG                               -->
+  <!-- ================================================================= -->
+  <div class="modal-overlay" id="voucherModalOverlay" style="display: none;">
+    <div class="voucher-modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🎟️ Redeem WiFi Voucher</h2>
+        <button class="btn-modal-close" onclick="closeVoucherModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="voucher-prompt">Enter your prepaid WiFi voucher code below to activate internet access:</p>
+        <div class="voucher-input-wrap">
+          <input type="text" id="voucherCodeInput" class="voucher-input" placeholder="e.g. WF5-XXXX" maxlength="12" autocomplete="off" autofocus>
+          <button class="btn-primary" onclick="redeemVoucherCode()">Redeem</button>
+        </div>
+        <div class="sample-vouchers-box">
+          <div class="sample-title">Available Active Vouchers for Testing:</div>
+          <div class="sample-tags" id="sampleVoucherTags">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL 3: THERMAL PRINTABLE VOUCHER RECEIPT SHEET                 -->
+  <!-- ================================================================= -->
+  <div class="modal-overlay" id="printModalOverlay" style="display: none;">
+    <div class="print-preview-dialog">
+      <div class="dialog-header">
+        <h2>🖨️ Thermal Voucher Slips (58mm / 80mm POS Layout)</h2>
+        <div class="dialog-btn-group">
+          <button class="btn-primary" onclick="window.print()">Print Slips</button>
+          <button class="btn-modal-close" onclick="closePrintModal()">✕</button>
+        </div>
+      </div>
+      <div class="thermal-receipt-sheet" id="thermalReceiptSheet">
+        <!-- Rendered dynamically for printing -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

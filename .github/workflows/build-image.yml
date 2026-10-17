@@ -1,0 +1,55 @@
+name: Build Bootable WiFi5 LPB Piso WiFi Image
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y parted udev util-linux e2fsprogs xz-utils wget curl
+
+      - name: Execute Bootable Image Builder
+        run: |
+          sudo bash scripts/build_bootable_image.sh
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wifi5-lpb-pisowifi-orangepione.img.xz
+          path: output/*.img.xz
+          retention-days: 14
+
+      - name: Publish GitHub Release with Direct Download Link
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: v1.0.0-prebaked
+          name: "WiFi5 LPB Piso WiFi - Ready to Flash Armbian Image"
+          body: |
+            ## 🚀 Pre-Baked Ready-to-Flash Image
+            - **Target SBC**: Orange Pi One (Allwinner H3)
+            - **Armbian Base**: Armbian Minimal Bookworm / Trixie
+            - **Root Password**: `orangepi`
+            - **Hostname**: `wifi5-piso`
+            - **First Run Automation**: Pre-configured `armbian_first_run.txt`
+            - **Hotspot IP**: `10.0.0.1` (Admin Studio PIN: `1234`)
+            
+            ### How to Flash:
+            1. Download `wifi5-lpb-pisowifi-orangepione.img.xz` below.
+            2. Open **Balena Etcher** or **Raspberry Pi Imager**.
+            3. Select the downloaded `.img.xz` file and your MicroSD card.
+            4. Click **Flash!** and insert into your Orange Pi.
+          files: output/*.img.xz
+
